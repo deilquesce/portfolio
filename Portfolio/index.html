@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Daniel Ayoub - Developer Portfolio</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(90deg, #161E2F, #242F49, #384353, #FFA586, #B51A2B, #541ABE);
+            background-size: 600% 100%;
+            animation: gradient 15s linear infinite;
+            color: #FFA586;
+        }
+        header {
+            background-color: #242F49; /* Header background color */
+            color: #FFA586; /* Header text color */
+            text-align: center;
+            padding: 20px;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-size: 36px;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+        }
+        h1 {
+            font-size: 36px;
+        }
+        .container {
+            max-width: 100%;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: #384353; /* Container background color */
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        .section {
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.6s ease, transform 0.6s ease;
+            background-color: #384353; /* Section background color */
+        }
+        .skill-list {
+            list-style: none;
+            padding: 0;
+        }
+        .skill-list li {
+            margin-bottom: 5px;
+        }
+        .btn {
+            display: inline-block;
+            background-color: #B51A2B; /* Button background color */
+            color: #FFF; /* Button text color */
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            text-decoration: none;
+            font-weight: bold;
+            transition: background-color 0.3s ease;
+        }
+        .btn:hover {
+            background-color: #541ABE; /* Button background color on hover */
+        }
+        .portfolio-button {
+            text-align: center;
+            margin-top: 20px;
+        }
+        @keyframes gradient {
+            0% {
+                background-position: 0%;
+            }
+            100% {
+                background-position: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Daniel Ayoub - Developer Portfolio</h1>
+    </header>
+    <div class="container">
+        <div class="section" id="contact-info">
+            <p>Ready to work!</p>
+            <p>Thornhill, ON</p>
+            <p>Email: danielmatthewayoub@hotmail.com</p>
+            <p>Phone: +1 647 609 5373</p>
+        </div>
+
+        <div class="section" id="about-me">
+            <h2>About Me</h2>
+            <p>
+                A versatile and results-driven professional with a track record of exceeding targets and excelling in various roles, from education to software development. Proficient in a wide range of development skills, including .NET, automation, and systems enhancement. Experienced in roles spanning education, software development, admissions, and automotive sales. Committed to delivering excellence, fostering growth, and exceeding expectations in all endeavors.
+            </p>
+        </div>
+
+        <div class="section" id="work-experience">
+            <h2>Work Experience</h2>
+            <p>Development Experience</p>
+            <p>January 2022 to May 2022</p>
+            <p>Mayan Wraps - Lead programmer</p>
+            <ul>
+                <li>Created a desktop application for the company's back end to streamline workflow and create consistent and efficient pricing for their services and products. This application ensures customers seamlessly get quotes for a highly variable work process.</li>
+                <li>Trained the customer service team in how to use the application to deliver a better customer service experience.</li>
+            </ul>
+        
+            <p>July 2021 to December 2022</p>
+            <p>Iristel Inc - Junior Developer</p>
+            <ul>
+                <li>.NET developer responsible for researching, designing, implementing, and managing software programs.</li>
+                <li>Responsible for training new users to use the aforementioned programs.</li>
+                <li>Worked closely with senior software engineers to deliver software updates, desktop applications, and API solutions in a timely fashion.</li>
+                <li>Maintained and updated existing projects.</li>
+            </ul>
+        
+            <p>February 2021 to April 2021</p>
+            <p>CDI College - Assistant director of admissions</p>
+            <ul>
+                <li>Prototyped and developed an application to improve efficiency within the sales team.</li>
+                <li>Integrated the application into the company’s CRM system to introduce it to the rest of the company.</li>
+                <li>Responsible for promoting and selling the programs offered by the school to potential students.</li>
+                <li>Ensured the sales process is complete and compliant with Canada’s rules and regulations.</li>
+                <li>Worked closely with the campus financial director to come up with affordable and logical solutions for each student to pursue higher education.</li>
+            </ul>
+        
+            <p>June 2020 to September 2020</p>
+            <p>Scarboro Mazda - Product Specialist</p>
+            <ul>
+                <li>Tracked the customer database to find new and existing leads, updating the CRM database and using Excel for better customer management skills.</li>
+                <li>Improved customer satisfaction by creating an integrated script to follow up with customers and reach out on significant dates.</li>
+                <li>Expedited the resolution of customer problems and complaints to maximize satisfaction.</li>
+                <li>Kept abreast of best practices and promotional trends while continuously improving through feedback from the sales manager and sales director.</li>
+            </ul>
+        
+            <p>March 2020 to June 2020</p>
+            <p>Plaza Kia - Product Advisor</p>
+            <ul>
+                <li>Studied the sales process looking for inefficiencies using flow charts, process diagrams, and company-provided KPIs.</li>
+                <li>Created an innovative sales process to allow a relatively small team to be efficient in both time and closing ratio.</li>
+                <li>Tracked the success of the new sales process using company KPIs to ensure realistic and continuous growth goals are reached.</li>
+                <li>Reporting to the sales manager, responsible for providing an exceptional customer experience through lead acquisition, customer qualification, and relationship building.</li>
+            </ul>
+        </div>
+        
+
+        <div class="section" id="skills">
+            <h2>Skills</h2>
+            <ul class="skill-list">
+                <li>Python development with Machine Learning tools</li>
+                <li>APIs</li>
+                <li>REST</li>
+                <li>.NET Framework</li>
+                <!-- Add more skills here -->
+            </ul>
+        </div>
+        
+        <div class="portfolio-button">
+            <a class="btn" href="portfolio.html">View Portfolio</a>
+        </div>
+    </div>
+
+    <script>
+        const sections = document.querySelectorAll('.section');
+        let currentSectionIndex = 0;
+    
+        // Function to reveal the next section
+        function revealNextSection() {
+            // Show the new current section
+            sections[currentSectionIndex].style.opacity = 1;
+            sections[currentSectionIndex].style.transform = 'translateY(0)';
+        }
+    
+        // Initial animation check
+        sections[currentSectionIndex].style.opacity = 1;
+        sections[currentSectionIndex].style.transform = 'translateY(0)';
+    
+        // Automatically reveal sections one by one
+        const revealInterval = setInterval(() => {
+            if (currentSectionIndex < sections.length - 1) {
+                currentSectionIndex++;
+                revealNextSection();
+            } else {
+                clearInterval(revealInterval); // Stop when all sections are revealed
+            }
+        }, 2000); // Adjust the interval (in milliseconds) between section reveals as needed
+    </script>
+</body>
+</html>
