@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Daniel Ayoub - Developer Portfolio</title>
+    <style>
+       body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background: linear-gradient(90deg, #161E2F, #242F49, #384353, #FFA586, #B51A2B, #541ABE);
+    background-size: 300% 100%; /* Updated background-size */
+    animation: gradient 60s linear infinite; /* Updated animation duration to 60 seconds */
+    color: #E8BCB0;
+}
+
+@keyframes gradient {
+    0% {
+        background-position: 100% 50%;
+    }
+    100% {
+        background-position: -200% 50%; /* Adjusted background-position */
+    }
+}
+
+
+
+        header {
+            background-color: #242F49; /* Header background color */
+            color: #E8BCB0; /* Header text color */
+            text-align: center;
+            padding: 20px;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-size: 36px;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+        }
+        h1 {
+            font-size: 36px;
+        }
+        .container {
+            max-width: 100%;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: #384353; /* Container background color */
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        .section {
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.6s ease, transform 0.6s ease;
+            background-color: #384353; /* Section background color */
+        }
+        .skill-list {
+            list-style: none;
+            padding: 0;
+        }
+        .skill-list li {
+            margin-bottom: 5px;
+        }
+        .btn {
+            display: inline-block;
+            background-color: #B51A2B; /* Button background color */
+            color: #FFF; /* Button text color */
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            text-decoration: none;
+            font-weight: bold;
+            transition: background-color 0.3s ease;
+        }
+        .btn:hover {
+            background-color: #541ABE; /* Button background color on hover */
+        }
+        .portfolio-button {
+            text-align: center;
+            margin-top: 20px;
+        }
+        
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Welcome to Daniel Ayoub's Developer Portfolio</h1>
+    </header>
+    <div class="section" id="chalice-project">
+        <h2>Serverless Capabilities with Chalice</h2>
+        <pre class="retro-code">
+            from chalice import Chalice
+            from chalicelib import storage_service
+            from chalicelib import recognition_service
+            from chalicelib import comprehend_service
+            from chalicelib import database_service
+            import base64
+            import json
+            import uuid
+            from chalice import Chalice, UnauthorizedError
+    
+            app = Chalice(app_name='Capabilities')
+    
+            storage_location = 'contentcen301146330.aws.ai'
+            storage_service = storage_service.StorageService(storage_location)
+            recognition_service = recognition_service.RecognitionService(storage_service)
+            comprehend_service = comprehend_service.ComprehendService()
+            database_service = database_service.DatabaseService()
+    
+            @app.route('/')
+            def index():
+                return {'hello': 'world'}
+    
+            # Define hardcoded credentials
+            USERNAME = 'myuser'
+            PASSWORD = 'mypassword'
+    
+            @app.route('/login', methods=['POST'])
+            def login():
+                request = app.current_request
+                username = request.form_data['username']
+                password = request.form_data['password']
+    
+                # Check if provided credentials match hardcoded credentials
+                if username == USERNAME and password == PASSWORD:
+                    # Return a success message if authentication succeeds
+                    return {'message': 'Login successful'}
+                else:
+                    # Raise an UnauthorizedError if authentication fails
+                    raise UnauthorizedError('Invalid username or password')
+    
+            @app.route('/images', methods=['POST'], cors=True)
+            def upload_image():
+                """Processes file upload and saves file to storage service"""
+                request_data = json.loads(app.current_request.raw_body)
+                file_name = request_data['filename']
+                file_bytes = base64.b64decode(request_data['filebytes'])
+    
+                image_info = storage_service.upload_file(file_bytes, file_name)
+    
+                return image_info
+    
+            @app.route('/images/{image_id}/comprehend-image', methods=['GET'], cors=True)
+            def comprehend_image_text(image_id):
+                """Detects and translates text in the specified image"""
+    
+                MIN_CONFIDENCE = 80.0
+    
+                text_lines = recognition_service.detect_text(image_id)
+    
+                line_list = [" ".join(line['text'] for line in text_lines if line['confidence'] > MIN_CONFIDENCE)]
+                line_string = " ".join(line_list)
+    
+                comprehend_entities = comprehend_service.detect_entities(line_string)
+                comprehend_phi_entities = comprehend_service.detect_phi(line_string)
+    
+                card_info = {}
+    
+                for entity in comprehend_entities:
+                    if entity['Type'] == "PERSON":
+                        card_info["name"] = entity["Text"]
+    
+                for entity in comprehend_phi_entities:
+                    if entity['Type'] == "EMAIL":
+                        card_info["email"] = entity['Text']
+                    if entity['Type'] == "ADDRESS":
+                        card_info["address"] = entity["Text"]
+                    if entity['Type'] == "PHONE_OR_FAX":
+                        card_info["phone"] = entity['Text']
+    
+                return card_info
+    
+            @app.route('/database', methods=['POST', 'GET'], cors=True)
+            def save_to_database():
+                request = json.loads(app.current_request.raw_body)
+                name = request["name"]
+                phone = request["phone"]
+                address = request["address"]
+                email = request["email"]
+    
+                response = database_service.put_item(name, email, address, phone)
+                return response
+    
+            @app.route('/items', methods=['GET'], cors=True)
+            def get_all():
+                return database_service.get_all_items()
+    
+            @app.route('/items/{item_id}/update-item', methods=["POST"], cors=True)
+            def update_item(item_id):
+                request_data = json.loads(app.current_request.raw_body)
+                return database_service.update_item(request_data)
+    
+            @app.route('/items/{item_id}/delete-item', methods=["GET"], cors=True)
+            def delete_item(item_id):
+                return database_service.delete_item(item_id)
+        </pre>
+    
+        <p>
+            <strong>Description:</strong> Explore a powerful serverless application created using AWS Chalice, a Python framework for building serverless APIs and applications on AWS Lambda. This code snippet showcases a versatile set of features and functionalities that can be integrated into your projects:
+    
+            <ul>
+                <li>
+                    <strong>User Authentication:</strong> Implement user authentication with hardcoded credentials to ensure secure access to your application.
+                </li>
+                <li>
+                    <strong>Image Upload and Storage:</strong> Easily process and store uploaded images in a predefined storage location.
+                </li>
+                <li>
+                    <strong>Text Recognition:</strong> Leverage image recognition services to detect and translate text within uploaded images, with the ability to set a minimum confidence threshold.
+                </li>
+                <li>
+                    <strong>Entity Analysis:</strong> Utilize Amazon Comprehend to extract valuable information from recognized text, including names, email addresses, physical addresses, and phone numbers.
+                </li>
+                <li>
+                    <strong>Database Integration:</strong> Seamlessly interact with a database for various operations, including storing data, retrieving items, updating records, and deleting entries.
+                </li>
+            </ul>
+        </p>
+    </div>
+    <div class="section" id="ml-model-integration">
+        <h2>Machine Learning Model Integration for Face Mask Detection</h2>
+        <pre class="code-section">
+            # -*- coding: utf-8 -*-
+"""
+Created on Sun Apr 16 11:51:14 2023
+
+@author: Daniel Matthew
+"""
+import os
+import cv2
+import xml.etree.ElementTree as ET
+import numpy as np
+import matplotlib.pyplot as plt
+from sklearn.model_selection import train_test_split
+from keras.utils import to_categorical
+from keras.models import Sequential
+from keras.layers import Conv2D, MaxPooling2D, Dense, Flatten, Dropout
+from keras.preprocessing.image import ImageDataGenerator
+from keras.callbacks import ModelCheckpoint, EarlyStopping
+from keras.layers import Reshape
+from sklearn.metrics import accuracy_score, classification_report
+
+
+
+# Define directories
+img_dir = 'C:/Users/Daniel Matthew/Downloads/Data/images'
+ann_dir = 'C:/Users/Daniel Matthew/Downloads/Data/annotations'
+
+# Define classes
+classes = ['with_mask', 'without_mask', 'mask_worn_incorrectly']
+
+# Define image size
+img_size = (224, 224)
+
+# Load data and annotations
+data = []
+labels = []
+for i, filename in enumerate(os.listdir(img_dir)):
+    if filename.endswith('.png'):
+        img_path = os.path.join(img_dir, filename)
+        ann_path = os.path.join(ann_dir, filename.replace('.png', '.xml'))
+        tree = ET.parse(ann_path)
+        root = tree.getroot()
+        for obj in root.findall('object'):
+            label = obj.find('name').text
+            if label in classes:
+                xmin = int(obj.find('bndbox').find('xmin').text)
+                ymin = int(obj.find('bndbox').find('ymin').text)
+                xmax = int(obj.find('bndbox').find('xmax').text)
+                ymax = int(obj.find('bndbox').find('ymax').text)
+                img = cv2.imread(img_path)[ymin:ymax, xmin:xmax, :]
+                img = cv2.resize(img, img_size)
+                data.append(img)
+                labels.append(classes.index(label))
+
+# Convert to numpy arrays
+data = np.array(data)
+labels = np.array(labels)
+
+# Convert labels to categorical
+labels = to_categorical(labels, num_classes=3)
+
+# Split into train and test sets
+train_data, test_data, train_labels, test_labels = train_test_split(data, labels, test_size=0.2, random_state=42)
+
+# Convert labels to categorical
+train_labels = to_categorical(train_labels)
+test_labels = to_categorical(test_labels)
+
+# Define data generator for data augmentation
+datagen = ImageDataGenerator(
+    rotation_range=20,
+    zoom_range=0.15,
+    width_shift_range=0.2,
+    height_shift_range=0.2,
+    shear_range=0.15,
+    horizontal_flip=True,
+    fill_mode="nearest")
+
+# Define batch size
+batch_size = 32
+
+# Define data generators
+train_generator = datagen.flow(train_data, train_labels, batch_size=batch_size)
+
+val_generator = datagen.flow(test_data, test_labels, batch_size=batch_size)
+
+test_generator = datagen.flow(test_data, test_labels, batch_size=batch_size, shuffle=False)
+
+model = Sequential()
+model.add(Conv2D(32, (3, 3), padding='same', activation='relu', input_shape=(img_size[0], img_size[1], 3)))
+model.add(MaxPooling2D(pool_size=(2, 2)))
+model.add(Dropout(0.25))
+model.add(Conv2D(64, (3, 3), padding='same', activation='relu'))
+model.add(MaxPooling2D(pool_size=(2, 2)))
+model.add(Dropout(0.25))
+model.add(Conv2D(128, (3, 3), padding='same', activation='relu'))
+model.add(MaxPooling2D(pool_size=(2, 2)))
+model.add(Dropout(0.25))
+model.add(Reshape(target_shape=(28 * 28 * 128,)))
+model.add(Dense(512, activation='relu'))
+model.add(Dropout(0.5))
+model.add(Dense(3, activation='softmax'))
+
+
+# Compile model
+model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
+
+# Define number of epochs
+num_epochs = 50
+
+# Define callbacks
+checkpoint = ModelCheckpoint(filepath='model.h5', save_best_only=True, verbose=1)
+early_stop = EarlyStopping(patience=5, verbose=1)
+
+# Train the model
+history = model.fit(
+    train_generator,
+    epochs=num_epochs,
+    validation_data=val_generator,
+    callbacks=[checkpoint, early_stop]
+)
+
+# Evaluate the model on the test data
+test_loss, test_acc = model.evaluate(test_generator)
+print('Test accuracy:', test_acc)
+
+# Generate predictions on the test data
+test_generator.reset()
+preds = model.predict(test_generator, verbose=1)
+
+# Convert predictions to class labels
+predicted_classes = np.argmax(preds, axis=1)
+true_classes = test_generator.classes
+class_labels = list(test_generator.class_indices.keys())
+
+# Calculate the accuracy of the predictions
+acc = accuracy_score(true_classes, predicted_classes)
+print('Overall accuracy:', acc)
+
+# Generate a classification report
+report = classification_report(true_classes, predicted_classes, target_names=class_labels)
+print(report)
+        </pre>
+
+        <p>
+            <strong>Description:</strong> This Python script is part of Daniel Ayoub's Developer Portfolio and showcases the development of an image classification model using deep learning techniques. The script performs the following tasks:
+        </p>
+        
+        <ol>
+            <li>
+                <strong>Data Preparation:</strong>
+                <ul>
+                    <li>Loads image data and corresponding annotations for a multi-class classification problem.</li>
+                    <li>Resizes images and encodes labels into categorical format.</li>
+                </ul>
+            </li>
+            
+            <li>
+                <strong>Data Augmentation:</strong>
+                <ul>
+                    <li>Implements data augmentation techniques to enhance model generalization.</li>
+                </ul>
+            </li>
+            
+            <li>
+                <strong>Model Building:</strong>
+                <ul>
+                    <li>Constructs a convolutional neural network (CNN) model using Keras with multiple convolutional and pooling layers.</li>
+                </ul>
+            </li>
+            
+            <li>
+                <strong>Model Compilation:</strong>
+                <ul>
+                    <li>Compiles the model using categorical cross-entropy loss and the Adam optimizer.</li>
+                </ul>
+            </li>
+            
+            <li>
+                <strong>Model Training:</strong>
+                <ul>
+                    <li>Trains the model on the prepared dataset with early stopping and checkpoint saving.</li>
+                </ul>
+            </li>
+            
+            <li>
+                <strong>Model Evaluation:</strong>
+                <ul>
+                    <li>Evaluates the model's performance on a test dataset, calculating accuracy and generating a classification report.</li>
+                </ul>
+            </li>
+            
+            <li>
+                <strong>Result Display:</strong>
+                <ul>
+                    <li>Displays the accuracy score and classification report for the model's performance.</li>
+                </ul>
+            </li>
+        </ol>
+        
+        <p>
+            This code showcases Daniel's proficiency in image data preprocessing, deep learning model development, and evaluation, making it a valuable asset in his portfolio.
+        </p>
+        
+    </div>
+    
+
+
+    <div class="section" id="api-project">
+        <h2>Simple API Setup</h2>
+        <pre class="code-section">
+    # -*- coding: utf-8 -*-
+    """
+    Created on Sun Jan 22 13:16:17 2023
+    
+    @author: Daniel Matthew
+    """
+    
+    from flask import *
+    import json, time
+    
+    app = Flask(__name__)
+    
+    # declare endpoint
+    @app.route('/', methods=['GET'])
+    def home_page():
+        data_set = {
+            'Page': 'Home',
+            'Message': 'Successfully loaded homepage',
+            'Timestamp': time.time()
+        }
+        json_dump = json.dumps(data_set)
+        return json_dump
+    
+    # declare endpoint
+    @app.route('/user/', methods=['GET'])
+    def req_page():
+        user_query = str(request.args.get('user'))  # /user/?user=fafa
+        data_set = {
+            'Page': 'Request',
+            'Message': f'Successfully loaded request page for {user_query}',
+            'Timestamp': time.time()
+        }
+        json_dump = json.dumps(data_set)
+        return json_dump
+    
+    @app.route('/runKNN/', methods=['GET'])  # ?acc=90&rt=.2
+    def tst_page():
+        # what numbers we need to pass
+        passed_int = int(request.args.get('id'))  # /runKNN/?id=10
+        user_query = str(passed_int)
+        
+        # run through the algorithm here
+        
+        # return result as string
+        res = str(user_query)
+        
+        data_set = {
+            'Page': 'Request',
+            'Data Passed': f'{user_query}',
+            'Result': f'{res}',
+            'Timestamp': time.time()
+        }
+        json_dump = json.dumps(data_set)
+        return json_dump
+    
+    if __name__ == '__main__':
+        app.run(port=7777)
+        </pre>
+
+        <p>
+            
+            <p>
+                <strong>Description:</strong> This API setup is implemented using the Flask framework in Python. It defines several endpoints for handling different types of requests. Here's an overview of the key components:
+            </p>
+            
+            <ol>
+                <li>
+                    <strong>Home Page (/) Endpoint:</strong>
+                    <ul>
+                        <li>This endpoint serves as the homepage of the API.</li>
+                        <li>When accessed via a GET request, it returns a JSON response containing information about the page, a success message, and a timestamp.</li>
+                    </ul>
+                </li>
+            
+                <li>
+                    <strong>User Request (/user/) Endpoint:</strong>
+                    <ul>
+                        <li>This endpoint handles requests related to specific users.</li>
+                        <li>It expects a query parameter <code>user</code> in the URL, which is used to identify the user.</li>
+                        <li>When accessed via a GET request, it returns a JSON response indicating that the request page for the specified user has been successfully loaded.</li>
+                    </ul>
+                </li>
+            
+                <li>
+                    <strong>KNN Algorithm (/runKNN/) Endpoint:</strong>
+                    <ul>
+                        <li>This endpoint is used for running the K-Nearest Neighbors (KNN) algorithm.</li>
+                        <li>It expects a query parameter <code>id</code> in the URL, which represents the input data for the algorithm.</li>
+                        <li>Inside the endpoint, you can see a placeholder for the KNN algorithm logic, which can be implemented to process the input and return results.</li>
+                        <li>It returns a JSON response containing information about the request, the data passed, the result, and a timestamp.</li>
+                    </ul>
+                </li>
+            
+                <li>
+                    <strong>Application Start:</strong>
+                    <ul>
+                        <li>The script includes a block that starts the Flask application on port 7777 when the script is executed.</li>
+                    </ul>
+                </li>
+            </ol>
+            
+            <p>
+                Overall, this API provides a basic structure for handling different types of requests, including a homepage, user-specific requests, and a placeholder for a KNN algorithm. You can further develop and expand this API to include more functionality and specific algorithms as needed for your project.
+            </p>
+            
+        </p>
+    </div>
+    
+    <div class="section" id="sql-project">
+        <h2>SQL Tasks Snippet</h2>
+        <pre class="code-section">
+            Daniel Ayoub
+        
+            Processing and Updating a Group of Rows
+            BEGIN
+                UPDATE employee
+                SET sal = sal * 1.09
+                WHERE JOB <> 'PRESIDENT' AND sal < 2000;
+                DBMS_OUTPUT.PUT_LINE('salary is increased');
+                IF SQL%NOTFOUND THEN
+                    DBMS_OUTPUT.PUT_LINE('salary is the same');
+                END IF;
+            END;
+            4-9: Using an Explicit Cursor
+            DECLARE
+                ppid dd_payment.idpledge%TYPE;
+                pl_amt dd_pledge.pledgeamt%TYPE;
+                paymonths dd_pledge.paymonths%TYPE;
+                pay_amt dd_payment.payamt%TYPE;
+                paydate dd_payment.paydate%TYPE;
+                CURSOR curs_pp IS
+                SELECT pl.idpledge, pl.pledgeamt, pl.paymonths, pay.payamt, pay.paydate
+                FROM dd_pledge pl INNER JOIN dd_payment pay
+                ON pl.idpledge = pay.idpledge
+                ORDER BY idpledge, paydate;
+            BEGIN
+                OPEN curs_pp;
+                LOOP
+                    FETCH curs_pp into ppid, pl_amt, paymonths, pay_amt, paydate;
+                    EXIT WHEN curs_pp%NOTFOUND;
+                    DBMS_OUTPUT.PUT_LINE('REC FOUND: ID:'|| ppid || ' for $' || pl_amt || ', ' ||
+                    paymonths || ' times per month on ' || paydate);
+                END LOOP;
+                CLOSE curs_pp;
+            END;
+            4-10
+            SELECT pl.idpledge, pl.pledgeamt, pl.paymonths, pay.payamt, pay.paydate
+            FROM dd_pledge pl INNER JOIN dd_payment pay
+            ON pl.idpledge = pay.idpledge
+            ORDER BY idpledge, paydate;
+            4-11
+            DECLARE
+            CURSOR donorCursor(TypeCode VARCHAR2, PledgeAmt NUMBER) IS
+            SELECT d.IDDONOR,d.FIRSTNAME,d.LASTNAME,p.PLEDGEAMT
+            FROM DD_DONOR d,DD_PLEDGE p
+            WHERE d.IDDONOR =p.IDDONOR
+            AND d.TYPECODE =TypeCode
+            AND p.PLEDGEAMT >PledgeAmt;
+            BEGIN
+                OPEN donorCursor;
+                FOR rec_order in donorCursor('I',250) LOOP
+                    dbms_output.put_line(rec_order.IDDONOR||' '||rec_order.FIRSTNAME || ' '||' '||
+                    rec_order.LASTNAME||' '||rec_order.PLEDGEAMT);
+                END LOOP;
+                FOR rec_order in donorCursor('D',500) LOOP
+                    dbms_output.put_line(rec_order.IDDONOR||' '||rec_order.FIRSTNAME || ' '||' '||
+                    rec_order.LASTNAME||' '||rec_order.PLEDGEAMT);
+                END LOOP;
+                CLOSE donorCursor;
+            END;
+            4-12
+            DECLARE
+                curs_var SYS_REFCURSOR;
+                pid dd_payment.idpay%TYPE;
+                pl_amt dd_pledge.pledgeamt%TYPE;
+                paymonths dd_pledge.paymonths%TYPE;
+                pay_amt dd_payment.payamt%TYPE;
+                paydate dd_payment.paydate%TYPE;
+                lv_s CHAR(10) := 'D';
+                lv_d CHAR(10) := 'D';
+                CURSOR curs_pp IS
+                SELECT pl.idpledge, pl.pledgeamt, pl.paymonths, pay.payamt, pay.paydate
+                FROM dd_pledge pl INNER JOIN dd_payment pay
+                ON pl.idpledge = pay.idpledge;
+            BEGIN
+                OPEN CURS_PP;
+                if lv_s = 'D' THEN
+                LOOP
+                    FETCH curs_pp into pid, pl_amt, paymonths, pay_amt, paydate;
+                    EXIT WHEN curs_pp%NOTFOUND;
+                    DBMS_OUTPUT.PUT_LINE('Description: ID:'|| pid || ' for $' || pl_amt || ', ' ||
+                    paymonths || ' times per month on ' || paydate);
+                END LOOP;
+                else if lv_s = 'S' THEN
+                LOOP
+                    FETCH curs_pp into pid, pl_amt, paymonths, pay_amt, paydate;
+                    EXIT WHEN curs_pp%NOTFOUND;
+                    DBMS_OUTPUT.PUT_LINE('Summary: Amount: $' || pay_amt || ' Total: $' || pay_amt
+                    * paymonths );
+                END LOOP;
+                END IF;
+                END IF;
+                CLOSE curs_pp;
+            END;
+            
+            
+            BEGIN
+            INSERT INTO DD_DONOR(iddonor) VALUES ( 301);
+            EXCEPTION
+            WHEN DUP_VAL_ON_INDEX THEN
+            DBMS_OUTPUT.PUT_LINE('ERROR: This Id is already assigned');
+            END;
+        </pre>
+        <p>
+            <strong>4-8: Processing and Updating a Group of Rows</strong><br>
+            This SQL script begins with an update operation on an "employee" table. It multiplies the "sal" (salary) column by 1.09 for rows where the "JOB" is not equal to 'PRESIDENT' and the salary is less than 2000. After the update, it uses <code>DBMS_OUTPUT.PUT_LINE</code> to print 'salary is increased' if any rows were updated, and 'salary is the same' if no rows were updated.
+        </p>
+        
+        <p>
+            <strong>4-9: Using an Explicit Cursor</strong><br>
+            In this part of the script, an explicit cursor named <code>curs_pp</code> is declared. This cursor fetches data from a query that joins the "dd_pledge" and "dd_payment" tables using an inner join. The data fetched includes "idpledge," "pledgeamt," "paymonths," "payamt," and "paydate."<br>
+            Within a <code>BEGIN...END</code> block, the cursor is opened, and a loop is used to fetch rows from the cursor. For each row, it prints information about the pledge, including the ID, pledge amount, number of paymonths, pay amount, and pay date. The loop continues until there are no more rows to fetch.
+        </p>
+        
+        <p>
+            <strong>4-10: Select Statement</strong><br>
+            This part of the script executes a simple SQL <code>SELECT</code> statement. It retrieves data from the "dd_pledge" and "dd_payment" tables using an inner join, ordering the result by "idpledge" and "paydate."
+        </p>
+        
+        <p>
+            <strong>4-11: Using a Cursor with Parameters</strong><br>
+            Here, a cursor named <code>donorCursor</code> is declared with two parameters: "TypeCode" and "PledgeAmt." This cursor selects data from the "DD_DONOR" and "DD_PLEDGE" tables, filtering by "IDDONOR," "FIRSTNAME," "LASTNAME," and "PLEDGEAMT" based on the provided parameters. It fetches data for donors with a type code of 'I' and a pledge amount greater than 250, as well as donors with a type code of 'D' and a pledge amount greater than 500.<br>
+            Two loops are used to fetch and print the results for each set of criteria, and the cursor is closed after processing.
+        </p>
+        
+        <p>
+            <strong>4-12: Using Conditional Statements with Cursors</strong><br>
+            This part of the script declares a cursor named <code>curs_pp</code> that retrieves data from the "dd_pledge" and "dd_payment" tables using an inner join. Additionally, it declares two variables, "lv_s" and "lv_d," both initialized to 'D.'<br>
+            Within a <code>BEGIN...END</code> block, the cursor is opened, and a conditional statement checks the values of "lv_s." If "lv_s" is 'D,' it enters a loop that fetches and prints information about pledges (similar to 4-9). If "lv_s" is 'S,' it enters another loop that calculates and prints a summary of payment amounts based on the number of paymonths.
+        </p>
+        
+        <p>
+            <strong>4-13: Exception Handling</strong><br>
+            This part of the script begins with a <code>BEGIN...END</code> block. Inside it, there's an <code>INSERT INTO</code> statement that attempts to insert a record into the "DD_DONOR" table with an "iddonor" value of 301.<br>
+            If an exception with the name "DUP_VAL_ON_INDEX" occurs during the insert (indicating a duplicate value violation on an index), it uses <code>DBMS_OUTPUT.PUT_LINE</code> to print 'ERROR: This Id is already assigned.'
+        </p>
+        
+    </div>
+
+    <style>
+        /* Customize the scroll behavior for the code section */
+        .code-section {
+            max-height: 400px; /* Set a maximum height for the code section */
+            overflow: auto; /* Enable vertical scrolling when content overflows */
+            border: 1px solid #ccc; /* Add a border for visual separation */
+            padding: 10px; /* Add padding for readability */
+        }
+    </style>
+    <div class="button-container">
+        
+        <div class="button-styled">
+            <a id="homeButton"class="btn" href="#">Back to Home</a>
+        </div>
+        <script>
+            // Get a reference to the button element
+            var homeButton = document.getElementById("homeButton");
+        
+            // Add a click event listener to the button
+            homeButton.addEventListener("click", function () {
+                // Navigate to the index.html page
+                window.location.href = "index.html";
+            });
+        </script>
+        <style>
+            /* Center the button in the portfolio section */
+.button-container {
+    display: flex;
+    justify-content: center; /* Horizontally center the button */
+    align-items: center; /* Vertically center the button */
+    height: 100%; /* Ensure the container takes full height of the portfolio section */
+}
+
+/* Define the button style */
+.btn {
+    background-color: B51A2B;
+    color: #fff;
+    padding: 10px 20px;
+    border: none;
+    cursor: pointer;
+    border-radius: 5px;
+    font-size: 16px;
+}
+
+/* Style the button on hover */
+.btn:hover {
+    background-color: #541ABE;
+}
+
+            /* Define the button style */
+.button-styled {
+     /* Set the background color */
+    color: #fff; /* Set the text color */
+    padding: 10px 20px; /* Set padding */
+    border: none; /* Remove border */
+    cursor: pointer; /* Add a pointer cursor on hover */
+    border-radius: 5px; /* Add rounded corners */
+    font-size: 16px; /* Set font size */
+}
+
+        </style>
+    </div>
+
+    <script>
+        const sections = document.querySelectorAll('.section');
+        let currentSectionIndex = 0;
+    
+        // Function to reveal the next section
+        function revealNextSection() {
+            // Show the new current section
+            sections[currentSectionIndex].style.opacity = 1;
+            sections[currentSectionIndex].style.transform = 'translateY(0)';
+        }
+    
+        // Initial animation check
+        sections[currentSectionIndex].style.opacity = 1;
+        sections[currentSectionIndex].style.transform = 'translateY(0)';
+    
+        // Automatically reveal sections one by one
+        const revealInterval = setInterval(() => {
+            if (currentSectionIndex < sections.length - 1) {
+                currentSectionIndex++;
+                revealNextSection();
+            } else {
+                clearInterval(revealInterval); // Stop when all sections are revealed
+            }
+        }, 2000); // Adjust the interval (in milliseconds) between section reveals as needed
+    </script>
+    
+</body>
+</html>
